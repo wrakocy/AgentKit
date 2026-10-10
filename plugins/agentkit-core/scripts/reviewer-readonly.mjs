@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// GENERATED from wrak.agentkit@v1.0.0 (src/core/hooks/scripts/reviewer-readonly.mjs). Do not edit; change the source in wrak.agentkit and re-sync.
+// GENERATED from wrak.agentkit@v1.1.0 (src/core/hooks/scripts/reviewer-readonly.mjs). Do not edit; change the source in wrak.agentkit and re-sync.
 // PreToolUse hook (Bash): keep the code and security reviewer subagents read-only.
 //
 // Plugin agent frontmatter can only name tools ("Bash"), not restrict commands, so this hook

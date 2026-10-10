@@ -37,7 +37,7 @@ as a general exploration pass.
 
 The caller has already run the full Build & Test ladder (`AGENTS.md`, `## Build & Test`). You may
 run a narrowly scoped form of the repository's test command (filtered to the changed test project,
-class or file, as that section describes) to confirm the specific new or changed tests actually
+class or file, as that section describes, or as the language tier's default ladder describes when the repository has no such section) to confirm the specific new or changed tests actually
 run and pass, so you aren't reviewing dead code. Don't re-run the whole suite. Apart from that
 scoped test run, use the shell only for read-only git inspection.
 

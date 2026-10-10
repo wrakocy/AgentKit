@@ -128,3 +128,60 @@ test('refuses to run with a bad config', () => {
   assert.throws(() => sync({ target: makeConsumer({ tiers: ['core', 'nope'] }), kit }), /unknown tier/);
   assert.throws(() => sync({ target: fs.mkdtempSync(path.join(os.tmpdir(), 'empty-')), kit }), /agentkit\.json not found/);
 });
+
+const seedFiles = {
+  'templates/seed/AGENTS.md': '# AGENTS.md\n\n<!-- starter -->\n\n<!--\n    ## Build & Test\n-->\n',
+  'templates/seed/CLAUDE.md': '@AGENTS.md\n',
+};
+
+test('starter AGENTS.md and CLAUDE.md are created once when missing, and never touched again', () => {
+  const kit = makeKit('1.0.0', baseFiles(seedFiles));
+  const dir = makeConsumer({ tiers: ['core', 'dotnet'] });
+  const first = sync({ target: dir, kit });
+  assert.deepEqual(first.report.seeded.sort(), ['AGENTS.md', 'CLAUDE.md']);
+  assert.equal(read(path.join(dir, 'CLAUDE.md')), '@AGENTS.md\n');
+  assert.ok(!('AGENTS.md' in readJson(path.join(dir, '.github/agentkit.lock.json')).files), 'starter files are not owned by the lock');
+
+  write(path.join(dir, 'AGENTS.md'), 'my own content\n');
+  const second = sync({ target: dir, kit });
+  assert.deepEqual(second.report.seeded, []);
+  assert.equal(read(path.join(dir, 'AGENTS.md')), 'my own content\n');
+});
+
+test('existing AGENTS.md and CLAUDE.md are never replaced by starters', () => {
+  const kit = makeKit('1.0.0', baseFiles(seedFiles));
+  const dir = makeConsumer({ tiers: ['core', 'dotnet'] });
+  write(path.join(dir, 'AGENTS.md'), 'existing\n');
+  write(path.join(dir, 'CLAUDE.md'), 'existing claude\n');
+  const { report } = sync({ target: dir, kit });
+  assert.deepEqual(report.seeded, []);
+  assert.equal(read(path.join(dir, 'AGENTS.md')), 'existing\n');
+  assert.equal(read(path.join(dir, 'CLAUDE.md')), 'existing claude\n');
+  assert.match(report.warnings.join('\n'), /CLAUDE\.md does not import AGENTS\.md/);
+});
+
+test('core-only repos are warned when AGENTS.md has no Build & Test section; a commented-out one does not count', () => {
+  const kit = makeKit('1.0.0', baseFiles(seedFiles));
+  const seeded = makeConsumer({ tiers: ['core'] });
+  const a = sync({ target: seeded, kit });
+  assert.match(a.report.warnings.join('\n'), /no "## Build & Test" section/);
+
+  const real = makeConsumer({ tiers: ['core'] });
+  write(path.join(real, 'AGENTS.md'), '# A\n\n## Build & Test\n\n```bash\nmake test\n```\n');
+  write(path.join(real, 'CLAUDE.md'), '@AGENTS.md\n');
+  assert.deepEqual(sync({ target: real, kit }).report.warnings, []);
+});
+
+test('repos with a language tier are not warned about a missing Build & Test section', () => {
+  const kit = makeKit('1.0.0', baseFiles(seedFiles));
+  const dir = makeConsumer({ tiers: ['core', 'dotnet'] });
+  assert.deepEqual(sync({ target: dir, kit }).report.warnings, []);
+});
+
+test('dry run does not create starter files', () => {
+  const kit = makeKit('1.0.0', baseFiles(seedFiles));
+  const dir = makeConsumer({ tiers: ['core', 'dotnet'] });
+  const { report } = sync({ target: dir, kit, dryRun: true });
+  assert.deepEqual(report.seeded.sort(), ['AGENTS.md', 'CLAUDE.md']);
+  assert.ok(!fs.existsSync(path.join(dir, 'AGENTS.md')));
+});

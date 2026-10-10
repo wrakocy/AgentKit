@@ -2,7 +2,7 @@
 name: verify-and-review
 description: "The pre-PR procedure: run the repository's deterministic verification ladder, review your own diff, decide which specialist reviewers (code, test, security) the change actually warrants, brief them, address findings, and get explicit confirmation before committing, pushing or opening a PR. Use once an implementation and its tests are locally complete, before opening a PR, or whenever the user asks for a change to be verified or reviewed."
 ---
-<!-- GENERATED from wrak.agentkit@v1.0.0 (src/core/skills/verify-and-review/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/skills/verify-and-review/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Verify and Review
 
@@ -14,16 +14,22 @@ reviewers are invoked deliberately, at real risk boundaries, instead of by defau
 
 Run these checks yourself; none of them need a model.
 
-1. Open `AGENTS.md` at the repository root and find the `## Build & Test` section. Run the
-   commands in its fenced `bash` block, in order. That block is the repository's full
-   verification ladder, and normally what CI runs too.
-2. If `AGENTS.md` has no `## Build & Test` section, stop and tell the user. The repository hasn't
-   met the agent kit's contract, and guessing the commands is worse than asking.
-3. While iterating, scope the test step to the project, class or file you're touching, as the
-   section describes. Run the full ladder once before opening the PR.
-4. If a formatting step changes any files, re-run the build and test steps afterward. Don't
+1. Open `AGENTS.md` at the repository root and find the `## Build & Test` section (a real heading,
+   not one inside an HTML comment). Run the commands in its fenced `bash` block, in order. That
+   block is the repository's full verification ladder, and normally what CI runs too.
+2. If there is no such section (or no fenced block in it), look for a default ladder supplied by a
+   language tier of the kit: a skill whose description says it provides the default Build & Test
+   ladder for the repository's language. If one is available, follow it to work out the commands,
+   and tell the user once that they were inferred and that adding a `## Build & Test` section to
+   `AGENTS.md` makes them explicit.
+3. If there is neither a section nor a default ladder, stop and tell the user. The repository
+   hasn't met the agent kit's contract, and guessing the commands is worse than asking. The same
+   goes when a default ladder reports an ambiguity it can't resolve.
+4. While iterating, scope the test step to the project, class or file you're touching, as the
+   section (or the default ladder) describes. Run the full ladder once before opening the PR.
+5. If a formatting step changes any files, re-run the build and test steps afterward. Don't
    assume a formatting pass is a no-op for compilation.
-5. If any step fails, fix the cause and re-run from that step. Don't move on to review with a red
+6. If any step fails, fix the cause and re-run from that step. Don't move on to review with a red
    ladder.
 
 ## 2. Review your own diff

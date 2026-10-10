@@ -9,12 +9,17 @@ source, and you pull them into your repo with one command.
 
 You need Node 22+ and read access to this repository.
 
-**1. Check your repo has what the agents rely on.**
-- `AGENTS.md` with a `## Build & Test` section: one fenced `bash` block holding the commands that
-  verify your code, in order (format, build, test...). The workflow runs exactly these.
-- `CLAUDE.md` containing the single line `@AGENTS.md`.
+**1. Nothing to prepare.** Sync (step 3) creates a starter `AGENTS.md` and a `CLAUDE.md` containing
+`@AGENTS.md` if your repo has none, and never touches them again. What the workflow needs to know:
 
-Starting point: [templates/AGENTS.md](templates/AGENTS.md).
+- **How to build and test.** With the `dotnet` tier, nothing: if `AGENTS.md` has no
+  `## Build & Test` section, `verify-and-review` works out the restore / format / build / test
+  commands from your solution file and CI workflow, and tells you what it inferred. With only the
+  `core` tier there is no default, so add the section yourself: one fenced `bash` block with the
+  commands that verify your code, in order. Add it for `dotnet` repos too when you want the ladder
+  to match CI exactly.
+- **Your conventions** (optional): MUST / SHOULD / MUST NOT rules in `AGENTS.md` for the reviewers
+  to enforce. See [templates/AGENTS.md](templates/AGENTS.md) for the optional sections.
 
 **2. Add `.github/agentkit.json`.** Copy [templates/agentkit.json](templates/agentkit.json) and set:
 
@@ -45,6 +50,11 @@ Add `--dry-run` to preview without writing anything. Then commit what it wrote:
 | `.github/agents/`, `.github/skills/`, `.github/instructions/` | The Copilot versions of the agents, skills and review rules. Copilot reads these directly. |
 | `.claude/settings.json` | Turns on the Claude Code plugins at this exact version and allows read-only git/gh commands. Your own settings are kept. |
 | `.github/agentkit.json`, `.github/agentkit.lock.json` | Records the installed version and which files the kit owns. |
+| `AGENTS.md`, `CLAUDE.md` (only if missing) | Short starter files for you to edit. Sync never overwrites or updates them. |
+
+If something the workflow needs is missing (for example a `core`-only repo with no Build & Test
+section, or a `CLAUDE.md` that doesn't import `AGENTS.md`), sync prints a warning and lists it in
+the PR body; it doesn't change those files.
 
 **4. (Optional) Get updates automatically.** Copy
 [templates/agentkit-sync.yml](templates/agentkit-sync.yml) to `.github/workflows/agentkit-sync.yml`
@@ -96,7 +106,7 @@ change into the kit, or re-run with `--force`. `track: "1.x"` follows 1.x releas
 | Problem | Fix |
 |---|---|
 | `set "repo" to the kit repository` | `repo` in `.github/agentkit.json` must be `wrakocy/AgentKit`. |
-| Skill says `AGENTS.md` has no Build & Test | Add the section from step 1. |
+| Skill says there is no Build & Test and no default | You're on the `core` tier only, or the default couldn't decide (several solution files). Add the section from step 1. |
 | Claude Code doesn't show the plugins | Trust the folder; check you have git access to this repo; `/plugin` lists errors. |
 | Agents show up twice in VS Code | It reads both the Claude plugin and `.github/agents`. Disable plugins for that workspace (`chat.plugins.enabled: false`). |
 | Sync PR doesn't run CI | Pushes by the default token don't trigger workflows. Close and reopen the PR. |
@@ -106,7 +116,7 @@ change into the kit, or re-run with `--force`. `track: "1.x"` follows 1.x releas
 
 | | `core` (any language) | `dotnet` (adds to core) |
 |---|---|---|
-| Skill | `verify-and-review` | `dotnet-unit-test` (xUnit + Moq conventions) |
+| Skill | `verify-and-review` | `dotnet-unit-test` (xUnit + Moq conventions), `dotnet-default-build-test` (inferred ladder when `AGENTS.md` has none) |
 | Agents | `code-reviewer`, `test-reviewer`, `security-reviewer` | |
 | Review rules | `code-review-kit-general`, `code-review-kit-security` | `-dotnet`, `-dotnet-tests`, `-dotnet-security`, `-blazor` |
 | Claude only | Hook asking before `git commit/push` and `gh pr create/edit/merge`; hook keeping the code and security reviewers read-only | dotnet command permissions |

@@ -63,7 +63,7 @@ render from one source per agent.
 | Scope `dotnet test` while iterating; full run before the PR | T1, made generic |
 | The `Verify-Package-Versions.ps1` / MediatR 12.x explanation | Consumer (prose in its Build & Test section) |
 | Re-run build/test if `dotnet format` changed anything | T1, made generic ("a formatting step") |
-| (new) Stop if `## Build & Test` is missing; don't move on with a red ladder | T1 addition |
+| (new) Missing `## Build & Test`: use the language tier's default ladder (1.1.0), else stop and ask; don't move on with a red ladder | T1 addition |
 | Review your own diff first; it drives routing | T1, unchanged |
 | Risk-based selection; no "to be safe" reviews | T1, unchanged |
 | Trigger table | T1, with generic triggers; the repo-specific examples (handler, validator, domain event, Infrastructure integration) go to Consumer `## Agent Review Triggers` |

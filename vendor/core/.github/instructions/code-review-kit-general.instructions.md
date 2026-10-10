@@ -2,7 +2,7 @@
 description: Organization-wide PR review conventions for every repository using wrak.agentkit. Defines the [Required]/[Suggested] severity tags that all code-review-*.instructions.md files use, the nearest-sibling rule, and language-agnostic rules on tests, generated code and dead code. Repository-specific rule files sit beside this one and take precedence where they conflict.
 applyTo: "**"
 ---
-<!-- GENERATED from wrak.agentkit@v1.0.0 (src/core/instructions/code-review-kit-general.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/instructions/code-review-kit-general.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Code Review Standards: Organization-Wide
 

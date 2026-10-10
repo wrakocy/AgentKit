@@ -2,7 +2,7 @@
 description: Organization-wide PR review rules for .NET code (C#) — nullability, async and cancellation, dependency-injection lifetimes, disposal, exceptions and logging. Applies to every C# file. Repository-specific code-review-*.instructions.md files take precedence where they conflict.
 applyTo: "**/*.cs,**/*.razor"
 ---
-<!-- GENERATED from wrak.agentkit@v1.0.0 (src/dotnet/instructions/code-review-kit-dotnet.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.1.0 (src/dotnet/instructions/code-review-kit-dotnet.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Code Review Standards: .NET
 

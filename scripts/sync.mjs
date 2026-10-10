@@ -42,6 +42,8 @@ const readJson = (file, fallback) => (fs.existsSync(file) ? JSON.parse(fs.readFi
 const toJson = (value) => JSON.stringify(value, null, 2) + '\n';
 const sortedObject = (obj) => Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
 
+const stripHtmlComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
+
 export function sync({ target, dryRun = false, force = false, kit = kitRoot }) {
   const kitVersion = JSON.parse(fs.readFileSync(path.join(kit, 'package.json'), 'utf8')).version;
   const configPath = path.join(target, '.github', 'agentkit.json');
@@ -58,7 +60,7 @@ export function sync({ target, dryRun = false, force = false, kit = kitRoot }) {
   for (const t of tiers) if (!fs.existsSync(path.join(kit, 'vendor', t))) fail(`unknown tier "${t}" (no vendor/${t} in the kit)`);
 
   const lock = readJson(lockPath, { files: {}, claudeSettings: { allow: [], enabledPlugins: [] } });
-  const report = { added: [], updated: [], unchanged: [], removed: [], conflicts: [], keptModified: [] };
+  const report = { added: [], updated: [], unchanged: [], removed: [], conflicts: [], keptModified: [], seeded: [], warnings: [] };
 
   // ---- desired vendored files ----
   const desired = new Map();
@@ -136,6 +138,29 @@ export function sync({ target, dryRun = false, force = false, kit = kitRoot }) {
     [MARKETPLACE]: { source: { source: 'github', repo: config.repo, ref: `v${kitVersion}` } },
   };
 
+  // ---- starter files: created once if missing, never owned or overwritten afterwards ----
+  const seedDir = path.join(kit, 'templates', 'seed');
+  for (const rel of walk(seedDir)) {
+    const dest = path.join(target, rel);
+    if (fs.existsSync(dest)) continue;
+    report.seeded.push(rel);
+    if (!dryRun) writeFileEnsured(dest, fs.readFileSync(path.join(seedDir, rel)));
+  }
+
+  // ---- contract warnings (the files are the repository's own; sync only reports) ----
+  const hasLanguageTier = tiers.some((t) => t !== 'core');
+  const agentsFile = path.join(target, 'AGENTS.md');
+  if (!hasLanguageTier) {
+    const text = fs.existsSync(agentsFile) ? stripHtmlComments(fs.readFileSync(agentsFile, 'utf8')) : '';
+    if (!/^#{2,3}[ \t]+Build[ \t]*&[ \t]*Test\b/im.test(text)) {
+      report.warnings.push('AGENTS.md has no "## Build & Test" section and only the core tier is enabled, so verify-and-review has no commands to run. Add the section (see templates/AGENTS.md), or enable a language tier that provides a default ladder.');
+    }
+  }
+  const claudeFile = path.join(target, 'CLAUDE.md');
+  if (!report.seeded.includes('CLAUDE.md') && fs.existsSync(claudeFile) && !/@AGENTS\.md/.test(fs.readFileSync(claudeFile, 'utf8'))) {
+    report.warnings.push('CLAUDE.md does not import AGENTS.md. Add a line containing "@AGENTS.md" so Claude Code loads it.');
+  }
+
   // ---- write config, settings, lock ----
   const newConfig = { ...config, version: kitVersion };
   const newLock = {
@@ -166,13 +191,15 @@ export function formatSummary({ kitVersion, previousVersion, report, changedMeta
     if (items.length === 0) return;
     lines.push(`**${title}** (${items.length})`, ...items.map((f) => `- \`${f}\``), '');
   };
+  section('Created starter files (yours to edit; sync never overwrites them)', report.seeded);
   section('Added', report.added);
   section('Updated', report.updated);
   section('Removed (no longer shipped by the kit)', report.removed);
   section('Settings and metadata changed', changedMeta);
   section('CONFLICT: not overwritten (edited locally, or already existed before the first sync). Review, then delete the local file or re-run with --force', report.conflicts);
   section('Kept: no longer shipped by the kit but modified locally', report.keptModified);
-  if (report.added.length + report.updated.length + report.removed.length + changedMeta.length === 0 && report.conflicts.length === 0) {
+  section('WARNING', report.warnings);
+  if (report.added.length + report.updated.length + report.removed.length + report.seeded.length + changedMeta.length === 0 && report.conflicts.length === 0 && report.warnings.length === 0) {
     lines.push('Already up to date.', '');
   }
   return lines.join('\n');

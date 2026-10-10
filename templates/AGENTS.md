@@ -7,7 +7,9 @@
 
 ## Build & Test
 
-<!-- REQUIRED. The verify-and-review skill runs the commands in this block, in order. This should
+<!-- Required unless your tiers include a language tier that provides a default ladder (the dotnet
+     tier infers one from your solution file and CI workflow); then this section is an optional
+     override. The verify-and-review skill runs the commands in this block, in order. This should
      be the same ladder CI runs. Put any explanation (why a step exists, how to scope tests while
      iterating) in prose below the block. -->
 
