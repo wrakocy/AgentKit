@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/context/policy.md\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/confirm-git-write.sh\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(git push *)",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/confirm-git-write.sh\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr create *)",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/confirm-git-write.sh\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr edit *)",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/confirm-git-write.sh\""
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr merge *)",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/confirm-git-write.sh\""
+          },
+          {
+            "type": "command",
+            "command": "command -v node >/dev/null 2>&1 && node \"${CLAUDE_PLUGIN_ROOT}/scripts/reviewer-readonly.mjs\" || true"
+          }
+        ]
+      }
+    ]
+  }
+}

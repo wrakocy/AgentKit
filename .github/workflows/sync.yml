@@ -1,0 +1,91 @@
+# Reusable workflow: opens a PR in a consumer repository that brings it up to the newest kit
+# release within its `track` (see .github/agentkit.json). Consumers call this from a scheduled
+# workflow (templates/agentkit-sync.yml).
+#
+# Requirements:
+#   - This repository's Settings > Actions > General > Access must allow repositories in the
+#     organization to use its workflows (it is private/internal).
+#   - Secret AGENTKIT_TOKEN in the consumer: a fine-grained PAT (or app token) with
+#     Contents: read on the kit repository.
+#   - The consumer's Settings > Actions > General must allow Actions to create pull requests.
+name: sync
+
+on:
+  workflow_call:
+    secrets:
+      AGENTKIT_TOKEN:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout consumer
+        uses: actions/checkout@v7
+
+      - name: Read agentkit.json
+        id: config
+        run: |
+          test -f .github/agentkit.json || { echo "::error::.github/agentkit.json not found"; exit 1; }
+          echo "repo=$(jq -r '.repo' .github/agentkit.json)" >> "$GITHUB_OUTPUT"
+          echo "track=$(jq -r '.track // empty' .github/agentkit.json)" >> "$GITHUB_OUTPUT"
+          echo "version=$(jq -r '.version' .github/agentkit.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve newest release in track
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.AGENTKIT_TOKEN }}
+          REPO: ${{ steps.config.outputs.repo }}
+          TRACK: ${{ steps.config.outputs.track }}
+        run: |
+          major="${TRACK%%.*}"
+          test -n "$major" || { echo "::error::agentkit.json needs a \"track\" such as \"1.x\""; exit 1; }
+          tag=$(gh api "repos/${REPO}/git/matching-refs/tags/v${major}." --jq '.[].ref' \
+            | sed 's|refs/tags/||' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          test -n "$tag" || { echo "::error::no release tag matching v${major}.x.y found in ${REPO}"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout kit at that release
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ steps.config.outputs.repo }}
+          ref: ${{ steps.release.outputs.tag }}
+          token: ${{ secrets.AGENTKIT_TOKEN }}
+          path: .agentkit-src   # must be inside the workspace; removed before the PR is created
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Sync
+        run: |
+          node .agentkit-src/scripts/sync.mjs --target . --summary "${{ runner.temp }}/sync-summary.md"
+          rm -rf .agentkit-src
+
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Already up to date at ${TAG}."
+            exit 0
+          fi
+          branch="agentkit/sync-${TAG}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add -A
+          git commit -m "Sync wrak.agentkit to ${TAG}"
+          git push --force-with-lease origin "$branch"
+          if gh pr view "$branch" --json number >/dev/null 2>&1; then
+            gh pr edit "$branch" --title "Sync wrak.agentkit to ${TAG}" --body-file "${{ runner.temp }}/sync-summary.md"
+          else
+            gh pr create --head "$branch" --title "Sync wrak.agentkit to ${TAG}" --body-file "${{ runner.temp }}/sync-summary.md"
+          fi

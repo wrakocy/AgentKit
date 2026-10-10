@@ -1,0 +1,20 @@
+# Copy to .github/workflows/agentkit-sync.yml in the consuming repository.
+# Weekly (and on demand) opens a PR that updates the vendored wrak.agentkit files, the
+# .claude/settings.json entries it manages, and .github/agentkit.json to the newest release in
+# your `track`. Needs the AGENTKIT_TOKEN secret; see the kit's README, "Keeping a repository current".
+name: agentkit-sync
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    uses: OWNER/wrak-agentkit/.github/workflows/sync.yml@v1
+    secrets:
+      AGENTKIT_TOKEN: ${{ secrets.AGENTKIT_TOKEN }}

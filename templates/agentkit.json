@@ -1,0 +1,7 @@
+{
+  "version": "0.0.0",
+  "tiers": ["core"],
+  "repo": "OWNER/wrak-agentkit",
+  "track": "1.x",
+  "defaultBranch": "main"
+}

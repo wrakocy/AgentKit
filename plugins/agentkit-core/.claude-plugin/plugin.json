@@ -1,0 +1,15 @@
+{
+  "name": "agentkit-core",
+  "version": "1.0.0",
+  "description": "Language-agnostic agent workflow: verify-and-review skill, code/test/security reviewer agents, commit-and-push confirmation guard rails.",
+  "author": {
+    "name": "Wrak"
+  },
+  "keywords": [
+    "code-review",
+    "workflow"
+  ],
+  "metadata": {
+    "generatedFrom": "wrak.agentkit@v1.0.0"
+  }
+}

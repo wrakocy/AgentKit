@@ -1,0 +1,17 @@
+{
+  "_generatedFrom": "wrak.agentkit@v1.0.0",
+  "permissions": {
+    "allow": [
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet format:*)",
+      "Bash(dotnet list:*)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet --info)"
+    ]
+  },
+  "enabledPlugins": {
+    "agentkit-dotnet@wrak-agentkit": true
+  }
+}
