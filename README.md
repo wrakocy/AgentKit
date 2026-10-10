@@ -1,170 +1,140 @@
 # Wrak.AgentKit
 
-Shared AI-agent guidance for every repository in the organization, usable from **Claude Code** and
-**GitHub Copilot**. One canonical copy of each agent, skill and review rule lives in `src/`; a
-generator produces a Claude Code plugin marketplace and the Copilot-format files that consuming
-repositories commit.
+Shared AI-agent setup for our repositories, for both **Claude Code** and **GitHub Copilot**: a
+pre-PR workflow (`verify-and-review`), three read-only reviewer agents (code, test, security), and
+review rules. You write nothing per tool: the kit generates the Claude and Copilot versions from one
+source, and you pull them into your repo with one command.
 
-## What you get
+## Use it in your repo
 
-| | `core` (any language) | `dotnet` (adds to core) |
-|---|---|---|
-| Skill | `verify-and-review`: run the repo's Build & Test ladder, review your own diff, pick reviewers by risk, brief them, address findings, confirm before commit/push/PR | `dotnet-unit-test`: xUnit + Moq + builder conventions |
-| Agents | `code-reviewer`, `test-reviewer`, `security-reviewer` (independent, read-only, Must Fix / Should Fix / Questions / No Action output) | |
-| Review rules | `code-review-kit-general` (severity scheme, test/generated-code rules), `code-review-kit-security` | `code-review-kit-dotnet`, `-dotnet-tests`, `-dotnet-security`, `-blazor` |
-| Always-on policy | Never commit, push or create/update/merge a PR without explicit per-action confirmation | |
-| Claude guard rails | Hook that forces a prompt on `git commit/push` and `gh pr create/edit/merge`; hook that keeps the code and security reviewers read-only | |
-| Claude permissions | git/gh read-only allowlist | dotnet restore/build/test/format/list |
+You need Node 22+ and read access to this repository.
 
-Anything specific to one repository (architecture rules, its own `add-*` skills, its layer review
-files) stays in that repository and plugs in through the contract below.
+**1. Check your repo has what the agents rely on.**
+- `AGENTS.md` with a `## Build & Test` section: one fenced `bash` block holding the commands that
+  verify your code, in order (format, build, test...). The workflow runs exactly these.
+- `CLAUDE.md` containing the single line `@AGENTS.md`.
 
-## How it reaches each tool
+Starting point: [templates/AGENTS.md](templates/AGENTS.md).
 
-| Surface | Mechanism |
-|---|---|
-| Claude Code | Plugins `agentkit-core` / `agentkit-dotnet` from the `wrak-agentkit` marketplace, enabled and pinned in the consumer's `.claude/settings.json` |
-| Copilot cloud agent, Copilot CLI, VS Code, Visual Studio, JetBrains | Files committed in the consumer repo under `.github/` (agents, skills, instructions) |
-| Copilot code review | The committed `.github/instructions/code-review-*.instructions.md` files (it does not use custom agents) |
+**2. Add `.github/agentkit.json`.** Copy [templates/agentkit.json](templates/agentkit.json) and set:
 
-Copilot has no plugin install in Visual Studio or in code review, so those surfaces only see files in
-the repository. That is why the Copilot side is **vendored** into each consumer and kept current by a
-sync PR, rather than distributed as a plugin. The rule files are always vendored, for both tools:
-the Claude reviewers read the same copy Copilot code review does.
+```json
+{
+  "version": "0.0.0",
+  "tiers": ["core"],
+  "repo": "wrakocy/AgentKit",
+  "track": "1.x",
+  "defaultBranch": "main"
+}
+```
 
-## Consumer contract
+`tiers`: `["core"]` for any language, or `["core", "dotnet"]` to add the .NET / Blazor pieces.
+`defaultBranch`: the branch reviewers diff against. Leave the rest as is.
 
-A repository using the kit must provide:
-
-1. **`AGENTS.md` with a `## Build & Test` section** containing one fenced `bash` block: the full
-   verification ladder, in order, the same one CI runs. `verify-and-review` runs it instead of any
-   hard-coded command.
-2. **`CLAUDE.md` containing `@AGENTS.md`**, so Claude Code loads it. (Visual Studio does not read
-   `AGENTS.md`; the kit's agents and skill read it explicitly.)
-3. **`.github/agentkit.json`**:
-   ```json
-   { "version": "1.0.0", "tiers": ["core", "dotnet"], "repo": "wrakocy/AgentKit", "track": "1.x", "defaultBranch": "main" }
-   ```
-   `tiers` must include `core`. `defaultBranch` is what the reviewers diff against (falling back to
-   `origin/HEAD`). `repo` and `track` drive sync; `version` is maintained by sync.
-4. **Repo-specific rule files** named `.github/instructions/code-review-<area>.instructions.md`, each
-   with an `applyTo` glob and `[Required]` / `[Suggested]` tags. `[Required]` should trace to a MUST
-   or MUST NOT in `AGENTS.md`, `[Suggested]` to a SHOULD. The names `code-review-kit-*` and
-   `agentkit-*` are reserved for synced files. When a repo rule conflicts with a kit rule, the repo
-   rule wins.
-5. **`.claude/settings.json` is shared**: sync owns the `wrak-agentkit` marketplace entry, the
-   `agentkit-*` entries in `enabledPlugins`, and the permission entries it added (recorded in the
-   lock file); everything else is yours.
-
-Recommended `AGENTS.md` sections: `## Load-Bearing Conventions` (MUST / SHOULD / MUST NOT),
-`## Agent Review Triggers` (your repo's own examples of when each reviewer applies), `## CI`.
-See `templates/AGENTS.md` and `templates/code-review-example.instructions.md`.
-
-## Quick start
-
-### 1. Wire the repository (once)
+**3. Pull the kit in (run once).** From your repo's root:
 
 ```bash
-# in the consumer repo
-cp <kit>/templates/agentkit.json .github/agentkit.json     # edit tiers, repo, defaultBranch
-# make sure AGENTS.md has "## Build & Test" and CLAUDE.md contains @AGENTS.md
-
-# vendor the kit at a release tag (any machine with access to the kit repo)
 git clone --branch v1.0.0 --depth 1 https://github.com/wrakocy/AgentKit.git /tmp/AgentKit
 node /tmp/AgentKit/scripts/sync.mjs --target .
 ```
 
-Review and commit what it wrote: `.github/{agents,skills,instructions}/…`, `.github/agentkit.json`,
-`.github/agentkit.lock.json`, and `.claude/settings.json`. Add `--dry-run` to preview. Sync needs
-only Node 22+.
+Add `--dry-run` to preview without writing anything. Then commit what it wrote:
 
-### 2. Claude Code
+| Path in your repo | What it is |
+|---|---|
+| `.github/agents/`, `.github/skills/`, `.github/instructions/` | The Copilot versions of the agents, skills and review rules. Copilot reads these directly. |
+| `.claude/settings.json` | Turns on the Claude Code plugins at this exact version and allows read-only git/gh commands. Your own settings are kept. |
+| `.github/agentkit.json`, `.github/agentkit.lock.json` | Records the installed version and which files the kit owns. |
 
-Nothing else to do. When a developer opens the repo and trusts the folder, Claude Code registers the
-marketplace at the pinned tag and enables the plugins (settings written by sync). The kit repository
-is private, so each developer needs git access to it (`gh auth login && gh auth setup-git`).
-Skills are namespaced: `/agentkit-core:verify-and-review`. Agents appear as
-`agentkit-core:code-reviewer` and so on. If the repo has a project agent or skill with the same
-name, the project one wins.
+**4. (Optional) Get updates automatically.** Copy
+[templates/agentkit-sync.yml](templates/agentkit-sync.yml) to `.github/workflows/agentkit-sync.yml`
+and add a repo secret `AGENTKIT_TOKEN` (a fine-grained token with *Contents: read* on this repo).
+Each week it opens a PR with the newest release in your `track`.
 
-To roll out to a whole organization instead, put `extraKnownMarketplaces` and `enabledPlugins` in
-Claude Code managed settings.
+That's it. Nothing else to install.
 
-### 3. GitHub Copilot
+## What you'll see
 
-Nothing else to do: the files are committed. Pick the custom agents from the agent picker (VS Code,
-Visual Studio, JetBrains) or by name on the cloud agent and CLI. Copilot code review applies the
-`code-review-*.instructions.md` files automatically. In Visual Studio, custom instructions must be
-enabled once under *Tools > Options > GitHub > Copilot > Copilot Chat*.
+**Claude Code:** when a developer opens the repo and trusts the folder, the plugins load. Run
+`/agentkit-core:verify-and-review` before opening a PR. It runs your Build & Test commands, reviews
+your diff, and calls the reviewers that your change warrants (`agentkit-core:code-reviewer`, ...).
+Developers need git access to this repo (`gh auth login && gh auth setup-git`).
 
-### 4. Keeping a repository current
+**Copilot (VS Code, Visual Studio, JetBrains, CLI, cloud agent):** the agents appear in the agent
+picker, and the same `verify-and-review` skill is available. Copilot code review applies the review
+rules on every PR. In Visual Studio, turn on custom instructions once under *Tools > Options >
+GitHub > Copilot*.
 
-Copy `templates/agentkit-sync.yml` to `.github/workflows/agentkit-sync.yml`. Each week it opens a PR
-that moves the repo to the newest release inside its `track` (a new major version is a deliberate
-manual change to `track`). One PR updates the vendored files, the `.claude/settings.json` pin, and
-`agentkit.json`, so Claude and Copilot never drift apart. Setup:
+**Both:** the agents never commit, push or open a PR without asking you first, and the reviewers
+never edit files.
 
-- Secret `AGENTKIT_TOKEN` in the consumer: a fine-grained token with *Contents: read* on the kit repo.
-- In the kit repo: *Settings > Actions > General > Access* must allow the organization's repos to
-  call its workflows.
-- In the consumer: *Settings > Actions > General* must allow Actions to create pull requests. Pushes
-  made with the default token do not trigger other workflows, so CI will not run on the sync PR by
-  itself; push an empty commit or close and reopen it.
+## Adding your own rules
 
-Sync **never overwrites a vendored file that was edited by hand, or that existed before the first
-sync**. It lists those as conflicts in the PR body. Fix them by moving the change into the kit,
-deleting the local copy, or re-running with `--force`. Files the kit stops shipping are removed, and
-permission entries it added are removed, unless you changed them.
+The kit covers what is true of any repo. Put what is specific to yours in the repo itself:
 
-## Versioning and releases
+- Write your conventions in `AGENTS.md` as **MUST / SHOULD / MUST NOT** rules.
+- Add review rules as `.github/instructions/code-review-<area>.instructions.md`, with an `applyTo`
+  glob and `[Required]` (blocks the PR, comes from a MUST) or `[Suggested]` (comes from a SHOULD)
+  tags. Example: [templates/code-review-example.instructions.md](templates/code-review-example.instructions.md).
+- Optional `## Agent Review Triggers` in `AGENTS.md`: your own examples of when each reviewer applies.
 
-One kit-wide [SemVer](https://semver.org/) version, the `package.json` version, stamped into both
-`plugin.json` files, every generated header and the lock file.
+Don't name your files `code-review-kit-*` or `agentkit-*`; those belong to the kit and are
+overwritten on sync. Don't edit synced files: change them in this repo and release. If a rule of
+yours conflicts with a kit rule, yours wins.
 
-- **MAJOR**: breaking change to the contract (required sections, renamed or removed agents, skills or
-  rule files).
-- **MINOR**: new agents, skills or rules. **PATCH**: wording fixes.
+## Updating and conflicts
 
-Release: bump `version` in `package.json`, add a `## [x.y.z]` section to `CHANGELOG.md`, run
-`npm run generate`, commit, tag `vx.y.z`, push the tag. CI fails if the tag differs from
-`package.json`, if the CHANGELOG section is missing, or if the committed output differs from what
-the generator produces. Also move the floating `v1` tag used by the sync workflow reference
-(`git tag -f v1 && git push -f origin v1`) after every non-breaking release.
+Re-run step 3 with a newer tag, or merge the weekly sync PR. Sync updates the files it owns and
+removes ones the kit dropped. It **never overwrites a synced file you edited**, or a file that
+already existed at the same path before the first sync (for example an older hand-written
+`.github/agents/code-reviewer.agent.md`). It lists those as conflicts: delete your copy, or move your
+change into the kit, or re-run with `--force`. `track: "1.x"` follows 1.x releases only; moving to
+2.x is a deliberate edit.
 
-Claude Code only updates a cached plugin when its `version` changes, which is why every release bumps it.
+## Troubleshooting
 
-## Working on the kit
+| Problem | Fix |
+|---|---|
+| `set "repo" to the kit repository` | `repo` in `.github/agentkit.json` must be `wrakocy/AgentKit`. |
+| Skill says `AGENTS.md` has no Build & Test | Add the section from step 1. |
+| Claude Code doesn't show the plugins | Trust the folder; check you have git access to this repo; `/plugin` lists errors. |
+| Agents show up twice in VS Code | It reads both the Claude plugin and `.github/agents`. Disable plugins for that workspace (`chat.plugins.enabled: false`). |
+| Sync PR doesn't run CI | Pushes by the default token don't trigger workflows. Close and reopen the PR. |
+| The weekly workflow can't find the shared workflow | In this repo: *Settings > Actions > General > Access*, allow repos in the organization to use it. In your repo: allow Actions to create PRs. |
+
+## What's in the kit
+
+| | `core` (any language) | `dotnet` (adds to core) |
+|---|---|---|
+| Skill | `verify-and-review` | `dotnet-unit-test` (xUnit + Moq conventions) |
+| Agents | `code-reviewer`, `test-reviewer`, `security-reviewer` | |
+| Review rules | `code-review-kit-general`, `code-review-kit-security` | `-dotnet`, `-dotnet-tests`, `-dotnet-security`, `-blazor` |
+| Claude only | Hook asking before `git commit/push` and `gh pr create/edit/merge`; hook keeping the code and security reviewers read-only | dotnet command permissions |
+
+## Maintaining the kit
+
+Edit only `src/` (see [src/AUTHORING.md](src/AUTHORING.md)). `plugins/`, `vendor/` and
+`.claude-plugin/` are generated.
 
 ```bash
 npm ci
-npm run generate          # src/ -> plugins/, vendor/, .claude-plugin/ (commit the result)
-npm run check             # what CI runs: output matches src/, tier-1 has no language/product terms, release metadata
+npm run generate          # src/ -> generated output (commit it)
+npm run check             # what CI runs: output matches src/, tier-1 text is language-agnostic, release metadata
 npm test                  # generator, hook and sync tests
-npm run validate:claude   # claude plugin validate on the marketplace and both plugins (--strict)
+npm run validate:claude   # claude plugin validate on the marketplace and both plugins
 ```
 
-Edit only `src/`. Never edit `plugins/`, `vendor/` or `.claude-plugin/`; CI will fail. Authoring
-syntax (platform tool mapping, `{{agent:x}}` / `{{skill:x}}` tokens, `<!-- if:claude -->` blocks) is
-in [src/AUTHORING.md](src/AUTHORING.md). [docs/parity.md](docs/parity.md) records where each
-instruction from the original Wrak.CleanBlazor setup went.
-
-```
-src/{core,dotnet}/      agents/, skills/, instructions/, settings/permissions.json  (core also: policy.md, hooks/)
-scripts/                generate.mjs, check.mjs, sync.mjs, lib/, test/
-templates/              starting points for consumers (AGENTS.md, agentkit.json, sync workflow, example rule file)
-.github/workflows/      ci.yml, sync.yml (reusable)
-plugins/ vendor/ .claude-plugin/    generated
-```
+**Release:** bump `version` in `package.json`, add a `## [x.y.z]` section to `CHANGELOG.md`, run
+`npm run generate`, commit, tag `vx.y.z` and push the tag. Use SemVer: MAJOR for a breaking change
+to what consumers must provide, MINOR for new agents/skills/rules, PATCH for wording. Then move the
+floating `v1` tag that the weekly workflow uses: `git tag -f v1 && git push -f origin v1`.
+[docs/parity.md](docs/parity.md) records where each instruction from the original
+Wrak.CleanBlazor setup went.
 
 ## Known limits
 
-- **Not verified in a live session:** that `git commit/push` and `gh pr ...` actually trigger the
-  confirmation prompt through the hook's `if` filter and that `ask` is honored in auto mode (the
-  hook scripts and plugin loading are tested; a full model session was not run); how Copilot treats
-  the agents' tool names in every IDE; whether VS Code shows duplicate agents when it reads both the
-  Claude plugin and `.github/agents` (if it does, set `chat.plugins.enabled` to `false` for that workspace).
-- The reviewer read-only guard needs Node on the developer's machine. Without it the hook does
-  nothing and the normal permission flow applies; it is a guard rail, not a security boundary.
-- Copilot organization-level agents and instructions (`.github-private`, org custom instructions)
-  are not used; the kit is delivered per repository.
-- `git -C <dir> commit` is not matched by the confirmation hook's filter. The policy text still applies.
+- The confirmation prompt on `git commit/push` is implemented as a Claude Code hook; it has been
+  tested in isolation but not yet seen firing in a live session. `git -C <dir> commit` isn't matched.
+- The read-only guard for reviewers needs Node on the developer's machine; without it the hook does
+  nothing (the instructions still apply).
+- Copilot organization-level agents and instructions aren't used; the kit is delivered per repo.
