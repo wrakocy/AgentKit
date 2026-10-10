@@ -1,4 +1,4 @@
-# wrak.agentkit
+# Wrak.AgentKit
 
 Shared AI-agent guidance for every repository in the organization, usable from **Claude Code** and
 **GitHub Copilot**. One canonical copy of each agent, skill and review rule lives in `src/`; a
