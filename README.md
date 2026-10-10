@@ -43,7 +43,7 @@ A repository using the kit must provide:
    `AGENTS.md`; the kit's agents and skill read it explicitly.)
 3. **`.github/agentkit.json`**:
    ```json
-   { "version": "1.0.0", "tiers": ["core", "dotnet"], "repo": "OWNER/wrak-agentkit", "track": "1.x", "defaultBranch": "main" }
+   { "version": "1.0.0", "tiers": ["core", "dotnet"], "repo": "wrakocy/AgentKit", "track": "1.x", "defaultBranch": "main" }
    ```
    `tiers` must include `core`. `defaultBranch` is what the reviewers diff against (falling back to
    `origin/HEAD`). `repo` and `track` drive sync; `version` is maintained by sync.
@@ -70,8 +70,8 @@ cp <kit>/templates/agentkit.json .github/agentkit.json     # edit tiers, repo, d
 # make sure AGENTS.md has "## Build & Test" and CLAUDE.md contains @AGENTS.md
 
 # vendor the kit at a release tag (any machine with access to the kit repo)
-git clone --branch v1.0.0 --depth 1 https://github.com/OWNER/wrak-agentkit.git /tmp/wrak-agentkit
-node /tmp/wrak-agentkit/scripts/sync.mjs --target .
+git clone --branch v1.0.0 --depth 1 https://github.com/wrakocy/AgentKit.git /tmp/AgentKit
+node /tmp/AgentKit/scripts/sync.mjs --target .
 ```
 
 Review and commit what it wrote: `.github/{agents,skills,instructions}/…`, `.github/agentkit.json`,

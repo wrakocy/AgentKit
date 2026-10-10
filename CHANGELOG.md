@@ -4,7 +4,7 @@ All notable changes to wrak.agentkit. Versions follow [SemVer](https://semver.or
 breaking change to the consumer contract (required sections, renamed or removed agents, skills or
 rule files), MINOR for new agents, skills or rules, PATCH for wording fixes.
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-10-10
 
 Initial release, extracted from the Wrak.CleanBlazor template.
 
