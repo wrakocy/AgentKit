@@ -1,7 +1,10 @@
 # Copy to .github/workflows/agentkit-sync.yml in the consuming repository.
 # Weekly (and on demand) opens a PR that updates the vendored wrak.agentkit files, the
 # .claude/settings.json entries it manages, and .github/agentkit.json to the newest release in
-# your `track`. Needs the AGENTKIT_TOKEN secret; see the kit's README, "Keeping a repository current".
+# your `track`. The kit is public, so no secret is needed; the only setup is Settings > Actions >
+# General > "Allow GitHub Actions to create and approve pull requests". (Only if you use a private
+# copy of the kit, pass a secret AGENTKIT_TOKEN: add `secrets:` with
+# `AGENTKIT_TOKEN: ${{ secrets.AGENTKIT_TOKEN }}` below, and note the caller must then be private.)
 name: agentkit-sync
 
 on:
@@ -16,5 +19,3 @@ permissions:
 jobs:
   sync:
     uses: wrakocy/AgentKit/.github/workflows/sync.yml@v1
-    secrets:
-      AGENTKIT_TOKEN: ${{ secrets.AGENTKIT_TOKEN }}

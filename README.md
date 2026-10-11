@@ -58,8 +58,9 @@ the PR body; it doesn't change those files.
 
 **4. (Optional) Get updates automatically.** Copy
 [templates/agentkit-sync.yml](templates/agentkit-sync.yml) to `.github/workflows/agentkit-sync.yml`
-and add a repo secret `AGENTKIT_TOKEN` (a fine-grained token with *Contents: read* on this repo).
-Each week it opens a PR with the newest release in your `track`.
+and, in your repo, turn on *Settings > Actions > General > Allow GitHub Actions to create and
+approve pull requests*. No token is needed: this repo is public. Each week it opens a PR with the
+newest release in your `track`.
 
 That's it. Nothing else to install.
 
@@ -68,7 +69,7 @@ That's it. Nothing else to install.
 **Claude Code:** when a developer opens the repo and trusts the folder, the plugins load. Run
 `/agentkit-core:verify-and-review` before opening a PR. It runs your Build & Test commands, reviews
 your diff, and calls the reviewers that your change warrants (`agentkit-core:code-reviewer`, ...).
-Developers need git access to this repo (`gh auth login && gh auth setup-git`).
+This repo is public, so developers need no special access.
 
 **Copilot (VS Code, Visual Studio, JetBrains, CLI, cloud agent):** the agents appear in the agent
 picker, and the same `verify-and-review` skill is available. Copilot code review applies the review
@@ -107,10 +108,11 @@ change into the kit, or re-run with `--force`. `track: "1.x"` follows 1.x releas
 |---|---|
 | `set "repo" to the kit repository` | `repo` in `.github/agentkit.json` must be `wrakocy/AgentKit`. |
 | Skill says there is no Build & Test and no default | You're on the `core` tier only, or the default couldn't decide (several solution files). Add the section from step 1. |
-| Claude Code doesn't show the plugins | Trust the folder; check you have git access to this repo; `/plugin` lists errors. |
+| Claude Code doesn't show the plugins | Trust the folder; `/plugin` lists errors. |
 | Agents show up twice in VS Code | It reads both the Claude plugin and `.github/agents`. Disable plugins for that workspace (`chat.plugins.enabled: false`). |
 | Sync PR doesn't run CI | Pushes by the default token don't trigger workflows. Close and reopen the PR. |
-| The weekly workflow can't find the shared workflow | In this repo: *Settings > Actions > General > Access*, allow repos in the organization to use it. In your repo: allow Actions to create PRs. |
+| The weekly workflow fails to open a PR | In your repo, allow Actions to create and approve pull requests (*Settings > Actions > General*). |
+| Running a private copy of the kit | A public repo can't call a reusable workflow stored in a private repo, so callers must be private; also set this repo's *Settings > Actions > General > Access* to allow them, and give each caller a secret `AGENTKIT_TOKEN` (fine-grained, *Contents: read* on the kit) passed through `secrets:` in the workflow. |
 
 ## What's in the kit
 

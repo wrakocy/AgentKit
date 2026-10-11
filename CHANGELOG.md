@@ -4,6 +4,14 @@ All notable changes to wrak.agentkit. Versions follow [SemVer](https://semver.or
 breaking change to the consumer contract (required sections, renamed or removed agents, skills or
 rule files), MINOR for new agents, skills or rules, PATCH for wording fixes.
 
+## [Unreleased]
+
+- The kit repository is public. The reusable `sync.yml` workflow no longer needs a token
+  (`AGENTKIT_TOKEN` is optional, for private copies of the kit) and consumers no longer need git
+  access to the kit. Reason: GitHub does not let a public repository call a reusable workflow stored
+  in a private one, which broke the sync for public consumers such as the CleanBlazor template.
+  Delivered through the floating `v1` tag; no plugin or vendored-file changes.
+
 ## [1.1.0] - 2026-10-10
 
 Fewer things a repository has to write before the kit works.
