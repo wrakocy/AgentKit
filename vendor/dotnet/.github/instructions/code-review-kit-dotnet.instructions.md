@@ -42,6 +42,14 @@ settings before raising a style or nullability warning as a finding).
   `IHttpClientFactory` or a typed/named client.
 - **[Suggested]** Flag a service resolved through `IServiceProvider` (service locator) where
   constructor injection would work.
+- **[Required]** In Blazor Server applications, flag a service whose state must be shared across
+  circuits (an application-wide cache, for example) registered as anything other than `Singleton`,
+  and a service holding per-user or per-circuit state registered as anything other than `Scoped`.
+  A Singleton holding user data leaks it across users; a Scoped "shared cache" doesn't share
+  anything. (This rule lives here, not in the Blazor file, because registrations are in ordinary
+  `.cs` files.)
+- **[Required]** In Blazor Server applications, flag a Singleton service holding mutable state
+  without thread-safe access; every circuit calls it concurrently.
 
 ## Disposal
 

@@ -106,7 +106,7 @@ render from one source per agent.
 | web-blazor: user-facing behavior and accessibility (all bullets) | T2 `code-review-kit-blazor` (same severities) |
 | web-blazor: component test coverage (bUnit or code-behind test) | T2 `code-review-kit-blazor` |
 | web-blazor: functional tests must not exercise interactivity | Consumer |
-| AGENTS.md MUST: Singleton for cross-circuit services, Scoped for user state | T2 `code-review-kit-blazor` (Blazor Server lifetimes) |
+| AGENTS.md MUST: Singleton for cross-circuit services, Scoped for user state | T2 `code-review-kit-dotnet` (Blazor Server lifetimes; moved from the Blazor file in 1.1.0 because registrations live in `.cs` files) |
 | `add-unit-test`: all generic xUnit/Moq steps | T2 `dotnet-unit-test` (adds cancellation-token and narrow-test-run steps) |
 | `add-unit-test`: `Throw`, `Wrak.RandomData`, `Builders/<Domain>`, single UnitTests project, `docs/04` | Consumer |
 

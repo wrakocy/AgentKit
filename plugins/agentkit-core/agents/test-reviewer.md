@@ -35,10 +35,16 @@ scoped test run, use the shell only for read-only git inspection.
 
 1. The "Tests" section of `.github/instructions/code-review-kit-general.instructions.md`. Always
    read it. It covers whether a change needed a test at all and which test level fits.
-2. The `code-review-*.instructions.md` files in `.github/instructions/` whose `applyTo` glob
-   matches a changed test file. These are the detailed checklists for whether a test is shaped
-   correctly in this repository. Apply them; don't re-derive or contradict them. Don't read the
-   rest of the repository's review rules; architecture is agentkit-core:code-reviewer's remit.
+2. The `code-review-*.instructions.md` files in `.github/instructions/` that bear on tests:
+   - files whose `applyTo` glob matches a changed test file. These are the detailed checklists for
+     whether a test is shaped correctly in this repository;
+   - any section whose heading starts with "Tests" (for example "Tests: correlate behavior changes
+     with coverage") in files whose `applyTo` matches a changed *production* file. These say which
+     changes need which tests, and they are what catches production code that changed with no test
+     files changed at all.
+
+   Apply them; don't re-derive or contradict them. Don't read the rest of the repository's review
+   rules; architecture is agentkit-core:code-reviewer's remit.
 3. The single test-authoring skill matching the kind of test touched: a repository skill in
    `.claude/skills/` or `.github/skills/`, or a kit skill for the repository's language. Read
    only the one or ones matching the test projects or suites actually touched.

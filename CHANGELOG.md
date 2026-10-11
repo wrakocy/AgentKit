@@ -4,7 +4,7 @@ All notable changes to wrak.agentkit. Versions follow [SemVer](https://semver.or
 breaking change to the consumer contract (required sections, renamed or removed agents, skills or
 rule files), MINOR for new agents, skills or rules, PATCH for wording fixes.
 
-## [1.1.0] - Unreleased
+## [1.1.0] - 2026-10-10
 
 Fewer things a repository has to write before the kit works.
 
@@ -15,6 +15,10 @@ Fewer things a repository has to write before the kit works.
 - `sync.mjs` creates a starter `AGENTS.md` and `CLAUDE.md` (from `templates/seed/`) when they
   are missing, and never touches them afterwards. It warns, without changing anything, when a
   core-only repo has no Build & Test section or when `CLAUDE.md` doesn't import `AGENTS.md`.
+- Fix: the Blazor Server service-lifetime rules moved from the Blazor file (`.razor` only) to the
+  .NET file (`.cs`), so they apply to the files where services are registered.
+- Fix: `test-reviewer` also reads the "Tests..." sections of rule files that match changed
+  production files, so it catches production changes that come with no test changes.
 
 ## [1.0.0] - 2026-10-10
 

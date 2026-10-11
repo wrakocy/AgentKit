@@ -1,5 +1,5 @@
 ---
-description: Organization-wide PR review rules for Blazor components and pages — code-behind vs. markup, component lifecycle and disposal, Blazor Server service lifetimes, loading/empty/error states, validation presentation, accessibility, responsive layout, and component test coverage. Repository-specific Web/UI rule files (which name the repository's base component, shared components and state patterns) take precedence where they conflict.
+description: Organization-wide PR review rules for Blazor components and pages — code-behind vs. markup, component lifecycle and disposal, loading/empty/error states, validation presentation, accessibility, responsive layout, and component test coverage. Repository-specific Web/UI rule files (which name the repository's base component, shared components and state patterns) take precedence where they conflict.
 applyTo: "**/*.razor,**/*.razor.cs,**/*.razor.css"
 ---
 
@@ -34,15 +34,6 @@ not an abstract ideal.
   `StateHasChanged()`.
 - **[Suggested]** Flag JavaScript interop in `OnInitialized{Async}` or during prerendering instead
   of `OnAfterRender{Async}(firstRender: true)`.
-
-## Blazor Server service lifetimes
-
-- **[Required]** Flag a service whose state must be shared across circuits (an application-wide
-  cache, for example) registered as anything other than `Singleton`, and a service holding
-  per-user or per-circuit state registered as anything other than `Scoped`. A Singleton holding
-  user data leaks it across users; a Scoped "shared cache" doesn't share anything.
-- **[Required]** Flag a Singleton service holding mutable state without thread-safe access; every
-  circuit calls it concurrently.
 
 ## User-facing behavior and accessibility
 
