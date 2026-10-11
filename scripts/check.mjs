@@ -43,8 +43,10 @@ const changelog = exists(path.join(root, 'CHANGELOG.md')) ? readText(path.join(r
 if (!new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\]`, 'm').test(changelog)) {
   problems.push(`CHANGELOG.md has no "## [${version}]" section`);
 }
-if (process.env.GITHUB_REF_TYPE === 'tag' && process.env.GITHUB_REF_NAME !== `v${version}`) {
-  problems.push(`tag ${process.env.GITHUB_REF_NAME} does not match package.json version v${version}`);
+// A release tag is v<version>; the floating major tag consumers' sync workflow calls (v1) is also allowed.
+const allowedTags = [`v${version}`, `v${version.split('.')[0]}`];
+if (process.env.GITHUB_REF_TYPE === 'tag' && !allowedTags.includes(process.env.GITHUB_REF_NAME)) {
+  problems.push(`tag ${process.env.GITHUB_REF_NAME} must be ${allowedTags.join(' or ')} (package.json version is ${version})`);
 }
 
 if (problems.length > 0) {
