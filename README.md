@@ -7,7 +7,7 @@ source, and you pull them into your repo with one command.
 
 ## Use it in your repo
 
-You need Node 22+ and read access to this repository.
+You need Node 22+.
 
 **1. Nothing to prepare.** Sync (step 3) creates a starter `AGENTS.md` and a `CLAUDE.md` containing
 `@AGENTS.md` if your repo has none, and never touches them again. What the workflow needs to know:
@@ -39,11 +39,12 @@ You need Node 22+ and read access to this repository.
 **3. Pull the kit in (run once).** From your repo's root:
 
 ```bash
-git clone --branch v1.0.0 --depth 1 https://github.com/wrakocy/AgentKit.git /tmp/AgentKit
+git clone --branch v1 --depth 1 https://github.com/wrakocy/AgentKit.git /tmp/AgentKit
 node /tmp/AgentKit/scripts/sync.mjs --target .
 ```
 
-Add `--dry-run` to preview without writing anything. Then commit what it wrote:
+`v1` is always the newest 1.x release; sync pins your repo to that exact version. Add `--dry-run` to
+preview without writing anything. Then commit what it wrote:
 
 | Path in your repo | What it is |
 |---|---|
