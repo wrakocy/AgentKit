@@ -2,7 +2,7 @@
 description: Organization-wide PR review rules for security-sensitive changes in ASP.NET Core applications — authorization attributes and policies, environment-gated development auth, claims, configuration and secrets, EF Core raw SQL, deserialization, IFormFile uploads, cryptography and DataProtection, cookies, CORS, antiforgery, error details, and Microsoft.Identity.Web/OpenID Connect. The .NET forms of the rules in code-review-kit-security.instructions.md. Applies only when a change touches one of these boundaries.
 applyTo: "**/*.cs,**/*.razor,**/appsettings*.json,**/*.csproj"
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/dotnet/instructions/code-review-kit-dotnet-security.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/dotnet/instructions/code-review-kit-dotnet-security.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Code Review Standards: ASP.NET Core Security
 

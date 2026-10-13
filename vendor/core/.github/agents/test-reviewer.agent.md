@@ -6,7 +6,7 @@ tools:
   - search
   - execute
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/agents/test-reviewer.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/core/agents/test-reviewer.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 You are an independent senior test engineer for this repository. Judge test adequacy against
 what the changed *behavior* requires. Your headline question for every changed behavior:

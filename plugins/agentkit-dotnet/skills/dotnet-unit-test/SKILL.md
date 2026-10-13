@@ -2,7 +2,7 @@
 name: dotnet-unit-test
 description: "Add or change a .NET unit test using the organization's xUnit + Moq conventions: one test class per method under test, Moq mocks as readonly fields, Fact vs. Theory, Arrange/Act/Assert, guard-path tests, fluent test-data builders, and FluentValidation.TestHelper for validators. Use whenever adding or changing behavior in a .NET project that needs unit-test coverage. The repository's own AGENTS.md and test skills add project-specific rules (test project layout, builder locations, guard library)."
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/dotnet/skills/dotnet-unit-test/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/dotnet/skills/dotnet-unit-test/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Add a .NET Unit Test
 

@@ -1,6 +1,6 @@
 {
   "name": "agentkit-dotnet",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": ".NET / ASP.NET Core / Blazor add-on: unit-test skill and review rules. Requires agentkit-core.",
   "author": {
     "name": "Wrak"
@@ -15,6 +15,6 @@
     "agentkit-core"
   ],
   "metadata": {
-    "generatedFrom": "wrak.agentkit@v1.1.0"
+    "generatedFrom": "wrak.agentkit@v1.2.0"
   }
 }

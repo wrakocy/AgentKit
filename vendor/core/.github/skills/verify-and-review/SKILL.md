@@ -2,7 +2,7 @@
 name: verify-and-review
 description: "The pre-PR procedure: run the repository's deterministic verification ladder, review your own diff, decide which specialist reviewers (code, test, security) the change actually warrants, brief them, address findings, and get explicit confirmation before committing, pushing or opening a PR. Use once an implementation and its tests are locally complete, before opening a PR, or whenever the user asks for a change to be verified or reviewed."
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/skills/verify-and-review/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/core/skills/verify-and-review/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Verify and Review
 

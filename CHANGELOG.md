@@ -6,6 +6,8 @@ rule files), MINOR for new agents, skills or rules, PATCH for wording fixes.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-13
+
 - The kit repository is public. The reusable `sync.yml` workflow no longer needs a token
   (`AGENTKIT_TOKEN` is optional, for private copies of the kit) and consumers no longer need git
   access to the kit. Reason: GitHub does not let a public repository call a reusable workflow stored

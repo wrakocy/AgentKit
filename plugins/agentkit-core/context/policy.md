@@ -1,4 +1,4 @@
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/policy.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/core/policy.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Agent workflow policy (wrak.agentkit)
 

@@ -2,7 +2,7 @@
 description: Organization-wide PR review rules for .NET test code — xUnit, Moq, test-data builders and FluentValidation.TestHelper conventions. Covers the shape of tests being added; code-review-kit-general.instructions.md covers whether a PR needed a test at all. Repository-specific test rule files take precedence where they conflict.
 applyTo: "**/*Test*/**/*.cs,**/*Tests.cs,**/*Test.cs"
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/dotnet/instructions/code-review-kit-dotnet-tests.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/dotnet/instructions/code-review-kit-dotnet-tests.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Code Review Standards: .NET Tests
 

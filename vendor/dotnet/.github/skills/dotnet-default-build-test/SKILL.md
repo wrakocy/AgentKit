@@ -2,7 +2,7 @@
 name: dotnet-default-build-test
 description: "The default Build & Test ladder for .NET repositories whose AGENTS.md has no \"## Build & Test\" section. Use from the verify-and-review skill, or whenever you need to build, test or verify a .NET repository that doesn't say how: it works out the restore, format, build and test commands from the solution layout and the CI workflow, and tells the user they were inferred."
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/dotnet/skills/dotnet-default-build-test/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/dotnet/skills/dotnet-default-build-test/SKILL.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Default Build & Test for .NET
 

@@ -2,7 +2,7 @@
 description: Organization-wide PR review rules for security-sensitive changes (authentication, authorization, identity/claims, secrets, sensitive data, externally supplied input, file upload, cryptography, endpoint exposure). Language-agnostic. Applies only when a change touches one of these boundaries; most changes will not. Stack-specific and repository-specific security rule files sit beside this one.
 applyTo: "**"
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/instructions/code-review-kit-security.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/core/instructions/code-review-kit-security.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Code Review Standards: Security (Organization-Wide)
 

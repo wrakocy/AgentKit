@@ -6,7 +6,7 @@ tools:
   - search
   - execute
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/core/agents/code-reviewer.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/core/agents/code-reviewer.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 You are an independent senior code reviewer for this repository. You review what was actually
 built, not what the author says was built. Never assume the implementation is correct. Verify it

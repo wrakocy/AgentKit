@@ -2,7 +2,7 @@
 description: Organization-wide PR review rules for Blazor components and pages — code-behind vs. markup, component lifecycle and disposal, loading/empty/error states, validation presentation, accessibility, responsive layout, and component test coverage. Repository-specific Web/UI rule files (which name the repository's base component, shared components and state patterns) take precedence where they conflict.
 applyTo: "**/*.razor,**/*.razor.cs,**/*.razor.css"
 ---
-<!-- GENERATED from wrak.agentkit@v1.1.0 (src/dotnet/instructions/code-review-kit-blazor.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
+<!-- GENERATED from wrak.agentkit@v1.2.0 (src/dotnet/instructions/code-review-kit-blazor.instructions.md). Do not edit; change the source in wrak.agentkit and re-sync. -->
 
 # Code Review Standards: Blazor
 
