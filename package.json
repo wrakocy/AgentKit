@@ -11,6 +11,7 @@
     "generate": "node scripts/generate.mjs",
     "check": "node scripts/check.mjs",
     "validate:claude": "claude plugin validate . && claude plugin validate plugins/agentkit-core --strict && claude plugin validate plugins/agentkit-dotnet --strict",
+    "smoke:claude": "node scripts/smoke-install.mjs",
     "test": "node --test \"scripts/test/*.test.mjs\""
   },
   "dependencies": {

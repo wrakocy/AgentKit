@@ -64,6 +64,38 @@ newest release in your `track`.
 
 That's it. Nothing else to install.
 
+## Or: install the Claude Code plugins just for yourself
+
+To try the kit, or use it on a repo that hasn't adopted it, install the plugins at user scope. Nothing
+is written to the repo, so the Copilot files and the shared settings above don't apply. In a terminal:
+
+```bash
+claude plugin marketplace add "https://github.com/wrakocy/AgentKit.git#v1"
+```
+
+```bash
+claude plugin install agentkit-core@wrak-agentkit
+```
+
+Add `agentkit-dotnet@wrak-agentkit` the same way for .NET repos. (Inside Claude Code, `/plugin
+marketplace add` and `/plugin install` do the same.) `#v1` follows the newest 1.x release, not
+unreleased work on `main`. To update:
+
+```bash
+claude plugin marketplace update wrak-agentkit
+```
+
+```bash
+claude plugin update agentkit-core@wrak-agentkit
+```
+
+Then restart Claude Code.
+
+**Don't combine this with repos that sync the kit.** Claude Code keeps one `wrak-agentkit`
+marketplace per machine, so adding it here replaces the source the synced repos pinned: installs and
+updates in those repos then come from `#v1` instead of their pinned version, and the plugins show up
+twice (user and project). If your repos already sync the kit, you don't need this.
+
 ## What you'll see
 
 **Claude Code:** when a developer opens the repo and trusts the folder, the plugins load. Run
@@ -134,12 +166,16 @@ npm run generate          # src/ -> generated output (commit it)
 npm run check             # what CI runs: output matches src/, tier-1 text is language-agnostic, release metadata
 npm test                  # generator, hook and sync tests
 npm run validate:claude   # claude plugin validate on the marketplace and both plugins
+npm run smoke:claude      # install both plugins at user scope into a throwaway config dir
 ```
 
-**Release:** bump `version` in `package.json`, add a `## [x.y.z]` section to `CHANGELOG.md`, run
-`npm run generate`, commit, tag `vx.y.z` and push the tag. Use SemVer: MAJOR for a breaking change
-to what consumers must provide, MINOR for new agents/skills/rules, PATCH for wording. Then move the
-floating `v1` tag that the weekly workflow uses: `git tag -f v1 && git push -f origin v1`.
+**Release:** in a PR, bump `version` in `package.json`, add a `## [x.y.z]` section to
+`CHANGELOG.md` and run `npm run generate`. After it merges, tag `main` and push the tag:
+`git tag vx.y.z && git push origin vx.y.z`. Use SemVer: MAJOR for a breaking change to what consumers
+must provide, MINOR for new agents/skills/rules, PATCH for wording. The `release` workflow does the
+rest: it runs CI on the tag, creates the GitHub Release from the changelog section, moves the
+floating `v1` tag (used by the weekly sync and by user-scoped installs) unless a newer 1.x release
+exists, and then installs the plugins from both tags to check them. Don't move `v1` by hand.
 [docs/parity.md](docs/parity.md) records where each instruction from the original
 Wrak.CleanBlazor setup went.
 

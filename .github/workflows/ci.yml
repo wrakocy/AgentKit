@@ -1,14 +1,15 @@
-# Verifies the kit: tests, generated output matches src/, and Claude Code accepts the plugins.
-# On a version tag (vX.Y.Z) it also checks the tag matches package.json (done inside `npm run check`).
+# Verifies the kit: tests, generated output matches src/, Claude Code accepts the plugins, and a
+# user-scoped install from this checkout works. release.yml calls it on a version tag, where
+# `npm run check` also checks the tag matches package.json.
 name: ci
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -42,3 +43,6 @@ jobs:
 
       - name: Validate marketplace and plugins
         run: npm run validate:claude
+
+      - name: Install the plugins at user scope (smoke test)
+        run: npm run smoke:claude

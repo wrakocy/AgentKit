@@ -1,0 +1,106 @@
+# Publishes a release when you push a version tag (vX.Y.Z):
+#   1. runs ci.yml against the tag (tests, generated output, plugin validation, tag == package.json)
+#   2. creates the GitHub Release, with that version's CHANGELOG.md section as the notes
+#   3. moves the floating major tag (v1) to it, unless a newer v1.x.y release already exists,
+#      so consumers' weekly sync and user-scoped installs (marketplace added at #v1) pick it up
+#   4. installs the plugins from the published tags, the way a developer does, as a final check
+# Bump package.json and CHANGELOG.md in a PR first; this workflow never commits.
+name: release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      major-tag: ${{ steps.major.outputs.tag }}
+      moved: ${{ steps.major.outputs.moved }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          v="${VERSION#v}"
+          awk -v h="## [${v}]" 'index($0, h) == 1 { on = 1; next } on && /^## \[/ { exit } on' CHANGELOG.md \
+            > "${RUNNER_TEMP}/notes.md"
+          test -s "${RUNNER_TEMP}/notes.md" || { echo "::error::CHANGELOG.md has no notes under ## [${v}]"; exit 1; }
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TAG" --notes-file "${RUNNER_TEMP}/notes.md"
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "${RUNNER_TEMP}/notes.md"
+          fi
+
+      - name: Move floating major tag
+        id: major
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          major="${TAG%%.*}"
+          echo "tag=${major}" >> "$GITHUB_OUTPUT"
+          newest=$(gh api "repos/${REPO}/git/matching-refs/tags/${major}." --jq '.[].ref' \
+            | sed 's|refs/tags/||' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          if [ "$newest" != "$TAG" ]; then
+            echo "::notice::${newest} is newer than ${TAG}; leaving ${major} where it is."
+            echo "moved=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          sha=$(git rev-parse "${TAG}^{commit}")
+          if gh api "repos/${REPO}/git/ref/tags/${major}" >/dev/null 2>&1; then
+            gh api -X PATCH "repos/${REPO}/git/refs/tags/${major}" -f sha="$sha" -F force=true >/dev/null
+          else
+            gh api -X POST "repos/${REPO}/git/refs" -f ref="refs/tags/${major}" -f sha="$sha" >/dev/null
+          fi
+          echo "moved=true" >> "$GITHUB_OUTPUT"
+          echo "::notice::${major} now points at ${TAG} (${sha})."
+
+  verify-published:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code
+
+      - name: Install from the release tag
+        run: node scripts/smoke-install.mjs --source "https://github.com/${{ github.repository }}.git#${{ github.ref_name }}"
+
+      - name: Install from the floating major tag
+        if: needs.release.outputs.moved == 'true'
+        run: node scripts/smoke-install.mjs --source "https://github.com/${{ github.repository }}.git#${{ needs.release.outputs.major-tag }}"
