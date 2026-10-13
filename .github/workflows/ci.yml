@@ -1,6 +1,5 @@
 # Verifies the kit: tests, generated output matches src/, Claude Code accepts the plugins, and a
-# user-scoped install from this checkout works. release.yml calls it on a version tag, where
-# `npm run check` also checks the tag matches package.json.
+# user-scoped install from this checkout works. deploy.yml runs the same checks before releasing.
 name: ci
 
 on:
@@ -9,7 +8,6 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
-  workflow_call:
 
 permissions:
   contents: read

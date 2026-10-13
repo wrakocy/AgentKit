@@ -11,9 +11,11 @@ rule files), MINOR for new agents, skills or rules, PATCH for wording fixes.
   access to the kit. Reason: GitHub does not let a public repository call a reusable workflow stored
   in a private one, which broke the sync for public consumers such as the CleanBlazor template.
   Delivered through the floating `v1` tag; no plugin or vendored-file changes.
-- Release pipeline: pushing a `vX.Y.Z` tag runs CI, creates the GitHub Release from this file and
-  moves the floating major tag, then installs the plugins from the published tags. CI also
-  installs both plugins at user scope from the checkout (`npm run smoke:claude`).
+- One-click releases: the `deploy` workflow (run from the Actions tab, pick patch/minor/major)
+  bumps the version, dates this file's Unreleased notes and regenerates, runs every CI check, and
+  only then commits to `main`, tags, creates the GitHub Release from this file, moves the floating
+  major tag, and installs the plugins from the published tags. CI also installs both plugins at
+  user scope from the checkout (`npm run smoke:claude`).
 - README: how to install the Claude Code plugins for yourself, at user scope, from
   `https://github.com/wrakocy/AgentKit.git#v1`, without syncing them into a repo.
 

@@ -1,0 +1,157 @@
+# Releases the kit with one click (Actions > deploy > Run workflow, on main):
+#   1. bumps package.json (patch / minor / major), turns the CHANGELOG.md "## [Unreleased]" notes
+#      into "## [x.y.z] - <date>" under a fresh empty Unreleased heading, runs `npm run generate`
+#   2. runs every check on the result (tests, generated output, plugin validation, install smoke
+#      test) before anything is pushed
+#   3. commits to main and pushes the commit and the vX.Y.Z tag together
+#   4. creates the GitHub Release from the changelog section and moves the floating major tag (v1),
+#      which consumers' weekly sync and user-scoped installs (marketplace added at #v1) follow
+#   5. installs the plugins from the published tags, the way a developer does, as a final check
+# Write the release notes under "## [Unreleased]" as you go; the deploy refuses to run without them.
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        description: patch = wording fixes; minor = new agents, skills or rules; major = breaking change to what consumers provide
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      major-tag: ${{ steps.major.outputs.tag }}
+    steps:
+      - name: Only from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Run deploy from main (selected: ${GITHUB_REF})."
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unreleased notes exist
+        run: |
+          awk '/^## \[Unreleased\]/ { on = 1; next } on && /^## \[/ { exit } on' CHANGELOG.md \
+            | grep -q '[^[:space:]]' || { echo "::error::CHANGELOG.md has nothing under ## [Unreleased]"; exit 1; }
+
+      - name: Bump version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          version=$(npm version "$BUMP" --no-git-tag-version | sed 's/^v//')
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v${version}" >/dev/null; then
+            echo "::error::tag v${version} already exists"; exit 1
+          fi
+
+      - name: Date the changelog section
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          awk -v rel="## [${VERSION}] - ${today}" \
+            '!done && /^## \[Unreleased\]/ { print; print ""; print rel; done = 1; next } { print }' \
+            CHANGELOG.md > "${RUNNER_TEMP}/CHANGELOG.md"
+          mv "${RUNNER_TEMP}/CHANGELOG.md" CHANGELOG.md
+
+      - name: Generate
+        run: npm run generate
+
+      - name: Unit tests (generator, sync, hooks)
+        run: npm test
+
+      - name: Generated output matches src/
+        run: npm run check
+
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code
+
+      - name: Validate marketplace and plugins
+        run: npm run validate:claude
+
+      - name: Install the plugins at user scope (smoke test)
+        run: npm run smoke:claude
+
+      - name: Commit, tag and push
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Release ${TAG}"
+          git tag "$TAG"
+          git push --atomic origin HEAD:main "refs/tags/${TAG}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          awk -v h="## [${VERSION}]" 'index($0, h) == 1 { on = 1; next } on && /^## \[/ { exit } on' CHANGELOG.md \
+            > "${RUNNER_TEMP}/notes.md"
+          gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "${RUNNER_TEMP}/notes.md"
+
+      - name: Move floating major tag
+        id: major
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          major="${TAG%%.*}"
+          echo "tag=${major}" >> "$GITHUB_OUTPUT"
+          git tag -f "$major" "$TAG"
+          git push --force origin "refs/tags/${major}"
+          echo "::notice::${major} now points at ${TAG}."
+
+  verify-published:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.deploy.outputs.tag }}
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install Claude Code
+        run: npm install --global @anthropic-ai/claude-code
+
+      - name: Install from the release tag
+        run: node scripts/smoke-install.mjs --source "https://github.com/${{ github.repository }}.git#${{ needs.deploy.outputs.tag }}"
+
+      - name: Install from the floating major tag
+        run: node scripts/smoke-install.mjs --source "https://github.com/${{ github.repository }}.git#${{ needs.deploy.outputs.major-tag }}"

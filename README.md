@@ -169,13 +169,14 @@ npm run validate:claude   # claude plugin validate on the marketplace and both p
 npm run smoke:claude      # install both plugins at user scope into a throwaway config dir
 ```
 
-**Release:** in a PR, bump `version` in `package.json`, add a `## [x.y.z]` section to
-`CHANGELOG.md` and run `npm run generate`. After it merges, tag `main` and push the tag:
-`git tag vx.y.z && git push origin vx.y.z`. Use SemVer: MAJOR for a breaking change to what consumers
-must provide, MINOR for new agents/skills/rules, PATCH for wording. The `release` workflow does the
-rest: it runs CI on the tag, creates the GitHub Release from the changelog section, moves the
-floating `v1` tag (used by the weekly sync and by user-scoped installs) unless a newer 1.x release
-exists, and then installs the plugins from both tags to check them. Don't move `v1` by hand.
+**Release:** write the notes under `## [Unreleased]` in `CHANGELOG.md` as you change things. To
+release, run *Actions > deploy > Run workflow* on `main` and pick the bump. Use SemVer: MAJOR for a
+breaking change to what consumers must provide, MINOR for new agents/skills/rules, PATCH for wording.
+The `deploy` workflow bumps `package.json`, turns the Unreleased notes into a dated `## [x.y.z]`
+section and runs `npm run generate`. It runs every CI check on the result before pushing anything,
+then commits to `main`, pushes the `vx.y.z` tag, creates the GitHub Release from the changelog
+section, moves the floating `v1` tag (used by the weekly sync and by user-scoped installs), and
+installs the plugins from both tags to check them. Don't tag or move `v1` by hand.
 [docs/parity.md](docs/parity.md) records where each instruction from the original
 Wrak.CleanBlazor setup went.
 
